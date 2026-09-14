@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>捐赠资料展厅 · 纪念馆</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="inner">
+    <div>
+      <h1>纪念馆 · 捐赠资料展厅</h1>
+      <div class="sub">MEMORIAL HALL DONATION ARCHIVE</div>
+    </div>
+    <nav>
+      <a href="/" class="active">捐赠展厅</a>
+      <a href="/admin/">工作人员入口</a>
+    </nav>
+  </div>
+</header>
+
+<div class="container">
+  <div class="filter-bar">
+    <input type="text" id="kw" placeholder="搜索物品名称、编号、故事关键词…">
+    <select id="cat"><option value="">全部分类</option></select>
+    <select id="era"><option value="">全部年代</option></select>
+    <button class="btn" onclick="search()">查 询</button>
+  </div>
+  <div id="list" class="gallery"></div>
+  <div id="pager" class="pager"></div>
+</div>
+
+<footer>本展厅仅展示经审核并公开的资料 · 如您是捐赠人且发现资料有误，可在详情页提交更正说明</footer>
+
+<script>
+const DISPLAY_CN = { storage: '库房保存', exhibiting: '展出中', on_loan: '外借中', restoring: '修复中' };
+let state = { page: 1, keyword: '', category_id: '', era: '' };
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }
+
+async function loadFilters() {
+  const [cats, items] = await Promise.all([
+    fetch('/api/public/categories').then(r => r.json()),
+    fetch('/api/public/items?page_size=1').then(r => r.json()),
+  ]);
+  document.getElementById('cat').innerHTML = '<option value="">全部分类</option>' +
+    cats.categories.map(c => `<option value="${c.id}">${esc(c.name)}（${c.item_count}）</option>`).join('');
+  document.getElementById('era').innerHTML = '<option value="">全部年代</option>' +
+    (items.eras || []).map(e => `<option value="${esc(e)}">${esc(e)}</option>`).join('');
+}
+
+async function load() {
+  const q = new URLSearchParams({ page: state.page, page_size: 12 });
+  if (state.keyword) q.set('keyword', state.keyword);
+  if (state.category_id) q.set('category_id', state.category_id);
+  if (state.era) q.set('era', state.era);
+  const data = await fetch('/api/public/items?' + q).then(r => r.json());
+  const list = document.getElementById('list');
+  if (!data.items.length) {
+    list.innerHTML = '<div class="empty" style="grid-column:1/-1">暂无符合条件的公开资料</div>';
+  } else {
+    list.innerHTML = data.items.map(it => `
+      <div class="card" onclick="location.href='/item.html?id=${it.id}'">
+        <div class="thumb" ${it.cover ? `style="background-image:url('/uploads/${it.cover}')"` : ''}>
+          ${it.cover ? '' : '🏛'}
+        </div>
+        <div class="body">
+          <h3>${esc(it.name)}</h3>
+          <div class="meta">
+            <span>编号：${esc(it.code)}　年代：${esc(it.era || '不详')}</span>
+            <span>分类：${esc(it.category_name || '未分类')}　捐赠人：${esc(it.donor_name || '匿名')}</span>
+            <span><span class="tag green">${DISPLAY_CN[it.display_status] || it.display_status}</span></span>
+          </div>
+        </div>
+      </div>`).join('');
+  }
+  const pages = Math.max(1, Math.ceil(data.total / data.page_size));
+  document.getElementById('pager').innerHTML = `
+    <button ${state.page <= 1 ? 'disabled' : ''} onclick="goPage(${state.page - 1})">上一页</button>
+    <span>第 ${state.page} / ${pages} 页 · 共 ${data.total} 件</span>
+    <button ${state.page >= pages ? 'disabled' : ''} onclick="goPage(${state.page + 1})">下一页</button>`;
+}
+
+function search() {
+  state.keyword = document.getElementById('kw').value.trim();
+  state.category_id = document.getElementById('cat').value;
+  state.era = document.getElementById('era').value;
+  state.page = 1;
+  load();
+}
+function goPage(p) { state.page = p; load(); window.scrollTo(0, 0); }
+document.getElementById('kw').addEventListener('keydown', e => { if (e.key === 'Enter') search(); });
+
+loadFilters();
+load();
+</script>
+</body>
+</html>

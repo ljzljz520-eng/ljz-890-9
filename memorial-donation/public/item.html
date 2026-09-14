@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>资料详情 · 纪念馆</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="inner">
+    <div>
+      <h1>纪念馆 · 捐赠资料展厅</h1>
+      <div class="sub">MEMORIAL HALL DONATION ARCHIVE</div>
+    </div>
+    <nav><a href="/">← 返回展厅</a></nav>
+  </div>
+</header>
+
+<div class="container" id="app"><div class="empty">加载中…</div></div>
+<footer>如发现以上资料有误，捐赠人可点击「提交更正说明」告知我们</footer>
+
+<script>
+const DISPLAY_CN = { storage: '库房保存', exhibiting: '展出中', on_loan: '外借中', restoring: '修复中' };
+const id = new URLSearchParams(location.search).get('id');
+function esc(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }
+
+async function load() {
+  const res = await fetch('/api/public/items/' + id);
+  if (!res.ok) {
+    document.getElementById('app').innerHTML = '<div class="empty">资料不存在或未公开 · <a href="/">返回展厅</a></div>';
+    return;
+  }
+  const { item, images } = await res.json();
+  document.title = item.name + ' · 纪念馆';
+  const imgHtml = images.length
+    ? `<img class="main-img" id="mainImg" src="/uploads/${images[0].filename}" alt="${esc(item.name)}">
+       <div class="thumb-row">${images.map((im, i) =>
+         `<img src="/uploads/${im.filename}" class="${i === 0 ? 'active' : ''}" onclick="switchImg(this, '/uploads/${im.filename}')">`).join('')}</div>`
+    : '<div class="main-img" style="display:flex;align-items:center;justify-content:center;color:#b8ad9c;font-size:60px">🏛</div>';
+  document.getElementById('app').innerHTML = `
+    <div class="detail">
+      <div>${imgHtml}</div>
+      <div>
+        <h2>${esc(item.name)}</h2>
+        <span class="tag green">${DISPLAY_CN[item.display_status] || item.display_status}</span>
+        <span class="tag">${esc(item.category_name || '未分类')}</span>
+        <dl class="kv">
+          <dt>藏品编号</dt><dd>${esc(item.code)}</dd>
+          <dt>年　　代</dt><dd>${esc(item.era || '不详')}</dd>
+          <dt>捐 赠 人</dt><dd>${esc(item.donor_name || '匿名')}</dd>
+          <dt>捐赠日期</dt><dd>${esc(item.acquired_date || '—')}</dd>
+          <dt>所在位置</dt><dd>${esc(item.location || '—')}</dd>
+        </dl>
+        <a class="btn ghost small" href="/correct.html?item=${item.id}">✎ 我是捐赠人，提交更正说明</a>
+        <div class="section-title">物品描述</div>
+        <p>${esc(item.description || '暂无描述')}</p>
+        ${item.story ? `<div class="section-title">背后的故事</div><div class="story-box">${esc(item.story)}</div>` : ''}
+      </div>
+    </div>`;
+}
+function switchImg(el, src) {
+  document.getElementById('mainImg').src = src;
+  document.querySelectorAll('.thumb-row img').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+}
+load();
+</script>
+</body>
+</html>

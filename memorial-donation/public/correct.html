@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>提交更正说明 · 纪念馆</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="inner">
+    <div>
+      <h1>纪念馆 · 捐赠资料展厅</h1>
+      <div class="sub">MEMORIAL HALL DONATION ARCHIVE</div>
+    </div>
+    <nav><a href="/">← 返回展厅</a></nav>
+  </div>
+</header>
+
+<div class="container">
+  <div class="form-card">
+    <h2>提交更正说明</h2>
+    <div class="hint" id="itemHint">如您发现公开展示的资料与事实不符，请在此说明，工作人员核实后会及时处理。</div>
+    <div class="msg" id="msg"></div>
+    <form id="form" onsubmit="return submitForm(event)">
+      <div class="field"><label>更正的资料</label><input type="text" id="itemName" disabled></div>
+      <div class="field"><label>您的姓名 <span class="req">*</span></label><input type="text" id="donorName" maxlength="50" required placeholder="捐赠人姓名"></div>
+      <div class="field"><label>联系方式</label><input type="text" id="contact" maxlength="100" placeholder="电话或邮箱，便于工作人员核实（选填）"></div>
+      <div class="field"><label>更正说明 <span class="req">*</span></label><textarea id="content" required minlength="5" maxlength="2000" placeholder="请详细说明需要更正的内容，例如：年代应为1940年代而非1950年代……"></textarea></div>
+      <button class="btn" type="submit" style="width:100%">提交更正申请</button>
+    </form>
+  </div>
+</div>
+
+<script>
+const itemId = new URLSearchParams(location.search).get('item');
+function showMsg(text, ok) {
+  const m = document.getElementById('msg');
+  m.textContent = text;
+  m.className = 'msg ' + (ok ? 'ok' : 'err');
+}
+(async function init() {
+  if (!itemId) { showMsg('缺少资料参数，请从详情页进入', false); return; }
+  const res = await fetch('/api/public/items/' + itemId);
+  if (!res.ok) { showMsg('资料不存在或未公开', false); return; }
+  const { item } = await res.json();
+  document.getElementById('itemName').value = `${item.name}（编号：${item.code}）`;
+})();
+async function submitForm(e) {
+  e.preventDefault();
+  const body = {
+    item_id: Number(itemId),
+    donor_name: document.getElementById('donorName').value.trim(),
+    contact: document.getElementById('contact').value.trim(),
+    content: document.getElementById('content').value.trim(),
+  };
+  const res = await fetch('/api/public/corrections', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  if (res.ok) {
+    document.getElementById('form').style.display = 'none';
+    showMsg('✓ ' + data.message, true);
+  } else {
+    showMsg(data.error || '提交失败', false);
+  }
+  return false;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>工作人员登录 · 纪念馆捐赠资料管理系统</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="login-wrap">
+  <div class="login-box">
+    <h1>纪念馆捐赠资料管理系统</h1>
+    <div class="sub2">工 作 人 员 登 录</div>
+    <div class="msg" id="msg"></div>
+    <form onsubmit="return login(event)">
+      <div class="field"><label>用户名</label><input id="username" required autocomplete="username"></div>
+      <div class="field"><label>密　码</label><input id="password" type="password" required autocomplete="current-password"></div>
+      <button class="btn" style="width:100%;padding:12px" type="submit">登 录</button>
+    </form>
+    <p style="text-align:center;margin-top:18px"><a href="/" style="font-size:13px">← 返回前台展厅</a></p>
+  </div>
+</div>
+<script>
+async function login(e) {
+  e.preventDefault();
+  const res = await fetch('/api/auth/login', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      username: document.getElementById('username').value.trim(),
+      password: document.getElementById('password').value,
+    }),
+  });
+  const data = await res.json();
+  if (res.ok) location.href = '/admin/';
+  else {
+    const m = document.getElementById('msg');
+    m.textContent = data.error || '登录失败';
+    m.className = 'msg err';
+  }
+  return false;
+}
+// 已登录则直接进入后台
+fetch('/api/auth/me').then(r => { if (r.ok) location.href = '/admin/'; });
+</script>
+</body>
+</html>

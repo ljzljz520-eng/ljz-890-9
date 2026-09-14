@@ -1,0 +1,16 @@
+{
+  "name": "memorial-donation",
+  "version": "1.0.0",
+  "description": "纪念馆捐赠资料管理系统",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "seed": "node src/seed.js"
+  },
+  "dependencies": {
+    "express": "*",
+    "express-session": "*",
+    "multer": "*",
+    "sql.js": "*"
+  }
+}

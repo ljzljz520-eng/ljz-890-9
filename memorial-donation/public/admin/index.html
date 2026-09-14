@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理后台 · 纪念馆捐赠资料管理系统</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="admin-body">
+<aside class="sidebar">
+  <div class="logo">捐赠资料管理<small>MEMORIAL DONATION ADMIN</small></div>
+  <nav id="nav">
+    <a data-page="dashboard" class="active">📊 工作台</a>
+    <a data-page="items">🏺 物品资料</a>
+    <a data-page="review">✅ 审核中心 <span class="badge" id="badgePending" style="display:none"></span></a>
+    <a data-page="corrections">✎ 更正申请 <span class="badge" id="badgeCorr" style="display:none"></span></a>
+    <a data-page="donors">👤 捐赠人</a>
+    <a data-page="categories">🗂 分类管理</a>
+    <a data-page="export">📦 数据导出</a>
+    <a data-page="admins" id="navAdmins" style="display:none">🔑 账号管理</a>
+  </nav>
+  <div class="user">
+    <b id="userName">—</b>
+    <span id="userRole"></span><br>
+    <a onclick="openPwdModal()">修改密码</a>
+    <a onclick="logout()">退出登录</a>
+  </div>
+</aside>
+<main class="main" id="main"></main>
+<div class="modal-mask" id="modalMask"><div class="modal" id="modalBox"></div></div>
+<div class="toast" id="toast"></div>
+<script src="/admin/admin.js"></script>
+</body>
+</html>
